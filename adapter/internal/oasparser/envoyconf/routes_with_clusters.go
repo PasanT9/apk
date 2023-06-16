@@ -1131,7 +1131,8 @@ func CreateAPIDefinitionRoute(basePath string, vHost string, methods []string) *
 		PathSpecifier: &routev3.RouteMatch_Path{
 			Path: path,
 		},
-		Headers: generateHTTPMethodMatcher(methodRegex, apiDefinitionClusterName),
+		QueryParameters: generateQueryParamMatcher("definitionType", "swagger"),
+		Headers:         generateHTTPMethodMatcher(methodRegex, apiDefinitionClusterName),
 	}
 
 	decorator = &routev3.Decorator{
