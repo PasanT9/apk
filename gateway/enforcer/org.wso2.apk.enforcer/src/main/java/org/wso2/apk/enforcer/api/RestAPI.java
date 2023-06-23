@@ -148,6 +148,7 @@ public class RestAPI implements API {
         boolean analyticsEnabled = ConfigHolder.getInstance().getConfig().getAnalyticsConfig().isEnabled();
 
         Utils.handleCommonHeaders(requestContext);
+        Utils.addTraceHeaders(requestContext);
         boolean isExistsMatchedResourcePath = requestContext.getMatchedResourcePaths() != null &&
                 requestContext.getMatchedResourcePaths().size() > 0;
         // This flag is used to apply CORS filter

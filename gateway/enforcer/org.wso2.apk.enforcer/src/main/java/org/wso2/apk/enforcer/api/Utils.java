@@ -154,4 +154,17 @@ public class Utils {
         // not allow clients to set cluster header manually
         requestContext.getRemoveHeaders().add(AdapterConstants.CLUSTER_HEADER);
     }
+
+    /**
+     * Adds trace headers to the provided RequestContext object.
+     *
+     * @param requestContext The request context
+     */
+    public static void addTraceHeaders(RequestContext requestContext) {
+        if (requestContext.getHeaders().containsKey(AdapterConstants.HttpRouterHeaders.X_REQUEST_ID)) {
+            requestContext.addOrModifyHeaders(AdapterConstants.HttpRouterHeaders.X_REQUEST_ID,
+                                              requestContext.getHeaders()
+                                                      .get(AdapterConstants.HttpRouterHeaders.X_REQUEST_ID));
+        }
+    }
 }
