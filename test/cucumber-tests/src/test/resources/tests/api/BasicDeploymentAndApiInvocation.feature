@@ -63,6 +63,23 @@ Feature: API Deployment and invocation
     And I send "DELETE" request to "https://default.gw.wso2.com:9095/test-default/employee/12" with body ""
     And the response status code should be 200
 
+  Scenario: Create an API version
+    Given The system is ready
+    And I have a valid subscription
+    When I use the APK Conf file "artifacts/apk-confs/employees_conf.yaml"
+    And the definition file "artifacts/definitions/employees_api.json"
+    And make the API deployment request
+    Then the response status code should be 200
+    When I use the APK Conf file "artifacts/apk-confs/employees_conf_v4.yaml"
+    And the definition file "artifacts/definitions/employees_api_v4.json"
+    And make the API deployment request
+    Then the response status code should be 200
+    Then I set headers
+      |Authorization|bearer ${accessToken}|
+    And I send "GET" request to "https://default.gw.wso2.com:9095/test/4.0/employeev4/" with body ""
+    And I eventually receive 200 response code, not accepting
+      |429|
+
   Scenario Outline: Undeploy API
     Given The system is ready
     And I have a valid subscription
