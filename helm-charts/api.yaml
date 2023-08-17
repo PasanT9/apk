@@ -1,0 +1,21 @@
+apiVersion: dp.wso2.com/v1alpha1
+kind: APIPolicy
+metadata:
+  name: sample-api-policy
+spec:
+  override:
+    cORSPolicy:
+      accessControlAllowCredentials: true
+      accessControlAllowOrigins:
+        - "abc.com"
+      accessControlAllowHeaders:
+        - authorization
+      accessControlAllowMethods:
+        - GET
+      accessControlExposeHeaders:
+        - "*"
+  targetRef:
+    group: dp.wso2.com
+    kind: API
+    name: 00a99d7023c97d0d76ae33c4695966eb4a94bedc
+

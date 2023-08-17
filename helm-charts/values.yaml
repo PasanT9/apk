@@ -109,12 +109,12 @@ wso2:
           strategy: RollingUpdate
           replicas: 1
           imagePullPolicy: Always
-          image: wso2/adapter:1.0.0-beta
+          image: localhost:5000/adapter:11.0.0-SNAPSHOT
           security:
             sslHostname: "adapter"
-#        logging:
-#          level: "INFO" # LogLevels can be "DEBG", "FATL", "ERRO", "WARN", "INFO", "PANC"
-#          logFormat: "TEXT" # Values can be "JSON", "TEXT"
+        logging:
+          level: "INFO" # LogLevels can be "DEBG", "FATL", "ERRO", "WARN", "INFO", "PANC"
+          logFormat: "TEXT" # Values can be "JSON", "TEXT"
         # configs:
         #   apiNamespaces:
         #     - "apk-v12"
@@ -176,6 +176,9 @@ wso2:
           #     certFilename: ""
           #     certCAFilename: ""
       gatewayRuntime:
+        analytics:
+          enabled: true
+          type: "ELK"
         deployment:
           replicas: 1
           router:
@@ -202,11 +205,11 @@ wso2:
             #     secretName: "router-cert"
             #     certKeyFilename: ""
             #     certFilename: ""
-#            logging:
-#              wireLogs:
-#                enable: true
-#              accessLogs:
-#                enable: true
+            logging:
+              wireLogs:
+                enable: true
+              accessLogs:
+                enable: true
           enforcer:
             resources:
               requests:
@@ -228,8 +231,8 @@ wso2:
             image: wso2/enforcer:1.0.0-beta
             security:
               sslHostname: "enforcer"
-#            logging:
-#              level: DEBUG
+            logging:
+              level: DEBUG
             # configs:
             #   tls:
             #     secretName: "router-cert"

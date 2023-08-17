@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-list-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-list-rolebinding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+roleRef:
+  kind: Role
+  name: pod-list-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: get-pods-cronjob
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          initContainers:
+            - name: kubectl-containeir
+              image: localhost:5000/kubectl:41.0.0
+              volumeMounts:
+                - name: logs
+                  mountPath: /var/log
+          containers:
+          - name: write-to-postgresql
+            image: localhost:5000/db-writer:4.0.0
+            volumeMounts:
+              - name: logs
+                mountPath: /var/log
+          restartPolicy: OnFailure
+          volumes:
+            - name: logs
+              emptyDir: {}

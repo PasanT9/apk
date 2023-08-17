@@ -90,6 +90,8 @@ type APIReconciler struct {
 	mgr            manager.Manager
 }
 
+var podStatus map[string]int
+
 // NewAPIController creates a new API controller instance. API Controllers watches for dpv1alpha1.API and gwapiv1b1.HTTPRoute.
 func NewAPIController(mgr manager.Manager, operatorDataStore *synchronizer.OperatorDataStore, statusUpdater *status.UpdateHandler,
 	ch *chan synchronizer.APIEvent, successChannel *chan synchronizer.SuccessEvent) error {
@@ -102,6 +104,7 @@ func NewAPIController(mgr manager.Manager, operatorDataStore *synchronizer.Opera
 		mgr:            mgr,
 	}
 	ctx := context.Background()
+	podStatus = make(map[string]int)
 
 	c, err := controller.New(constants.APIController, mgr, controller.Options{Reconciler: apiReconciler})
 	if err != nil {
@@ -185,6 +188,12 @@ func NewAPIController(mgr manager.Manager, operatorDataStore *synchronizer.Opera
 	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Secret{}), handler.EnqueueRequestsFromMapFunc(apiReconciler.getAPIsForSecret),
 		predicates...); err != nil {
 		loggers.LoggerAPKOperator.ErrorC(logging.PrintError(logging.Error2645, logging.BLOCKER, "Error watching Secret resources: %v", err))
+		return err
+	}
+
+	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Pod{}), handler.EnqueueRequestsFromMapFunc(apiReconciler.getPods),
+		predicates...); err != nil {
+		loggers.LoggerAPKOperator.ErrorC(logging.PrintError(logging.Error2645, logging.BLOCKER, "Error Pod resources: %v", err))
 		return err
 	}
 
@@ -911,6 +920,34 @@ func (apiReconciler *APIReconciler) getAPIsForSecret(ctx context.Context, obj k8
 		requests = append(requests, apiReconciler.getAPIsForBackend(ctx, &backend)...)
 	}
 	return requests
+}
+
+// getPods triggers the API controller reconcile method based on the changes detected
+// in secret resources.
+func (apiReconciler *APIReconciler) getPods(ctx context.Context, obj k8client.Object) []reconcile.Request {
+	pod, ok := obj.(*corev1.Pod)
+	if !ok {
+		loggers.LoggerAPKOperator.ErrorC(logging.PrintError(logging.Error2622, logging.TRIVIAL, "Unexpected object type, bypassing reconciliation: %v", pod))
+		return []reconcile.Request{}
+	}
+	labelValue := pod.Labels["app.kubernetes.io/release"]
+
+	if labelValue == "apk-test" {
+		for _, condition := range pod.Status.Conditions {
+			if condition.Type == corev1.ContainersReady && condition.Status == corev1.ConditionTrue {
+				podStatus[pod.Name] = len(pod.Spec.Containers)
+			}
+			if condition.Type == corev1.ContainersReady && condition.Status == corev1.ConditionFalse {
+				delete(podStatus, pod.Name)
+			}
+		}
+	}
+	loggers.LoggerAPKOperator.Info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+	for key, value := range podStatus {
+		fmt.Printf("%s: %d\n", key, value)
+	}
+	loggers.LoggerAPKOperator.Info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+	return nil
 }
 
 // getAPIForAuthentication triggers the API controller reconcile method based on the changes detected
