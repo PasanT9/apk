@@ -1,0 +1,64 @@
+{{- if .Values.wso2.apk.podStatus.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "apk-helm.resource.prefix" . }}-pod-status
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "apk-helm.resource.prefix" . }}-pod-status-archive
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ template "apk-helm.resource.prefix" . }}-pod-status-retrieve-job
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ .Values.wso2.apk.auth.serviceAccountName }}
+          containers:
+          - name: kubectl-container
+            image: pasant9/retrieve-pod-status:1.0.0
+            env:
+              - name: APK_RELEASE_NAME
+                value: {{ .Release.Name }}
+              - name: APK_RESOURCE_PREFIX
+                value: {{ template "apk-helm.resource.prefix" . }}
+              - name: APK_RELEASE_NAMESPACE
+                value: {{ .Release.Namespace }}
+              - name: POD_STATUS_CONFIGMAP
+                value: {{ template "apk-helm.resource.prefix" . }}-pod-status
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ template "apk-helm.resource.prefix" . }}-pod-status-archive-job
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "0 0 1 * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ .Values.wso2.apk.auth.serviceAccountName }}
+          containers:
+          - name: kubectl-container
+            image: pasant9/archive-pod-status:7.0.0
+            env:
+              - name: APK_RELEASE_NAMESPACE
+                value: {{ .Release.Namespace }}
+              - name: POD_STATUS_CONFIGMAP
+                value: {{ template "apk-helm.resource.prefix" . }}-pod-status
+              - name: POD_STATUS_ARCHIVE_CONFIGMAP
+                value: {{ template "apk-helm.resource.prefix" . }}-pod-status-archive
+          restartPolicy: OnFailure
+{{- end -}}

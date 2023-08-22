@@ -250,6 +250,9 @@ wso2:
       # -- This flag should be enabled only in a migration scenario.
       # -- It is not recommended to run a production deployment with this flag enabled.
       enabled: false
+    podStatus:
+      # -- This flag should be enabled only to enable pod status monitoring.
+      enabled: false
 idp:
   enabled: true
   listener:
