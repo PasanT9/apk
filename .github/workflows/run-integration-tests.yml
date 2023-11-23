@@ -20,7 +20,7 @@ env:
 
 jobs:
   build:
-    if: ${{ github.event.label.name == 'allow-workflow' }}
+    if: contains(github.event.pull_request.labels.*.name, 'allow-workflow')
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
