@@ -21,14 +21,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Check PR Labels
+        id: label_check
+        run: |
+          valid_label=false
+          # Example: Label to check for
+          required_label="allow-workflow"
+
+          for label in ${{ github.event.pull_request.labels.*.name }}; do
+            if [ "$label" == "$required_label" ]; then
+              valid_label=true
+              break
+            fi
+          done
+
+          if [ "$valid_label" == "true" ]; then
+            echo "::set-output name=valid::true"
+          else
+            echo "::set-output name=valid::false"
+          fi
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.19"
+        if: steps.label_check.outputs.valid == 'true'
       - name: Install Revive
         shell: sh
         run: |
           go install github.com/mgechev/revive@latest
+        if: steps.label_check.outputs.valid == 'true'
       - name: Checkout apk-repo
         uses: actions/checkout@v3
         with:
@@ -36,14 +57,16 @@ jobs:
           fetch-depth: "0"
           path: apk-repo
           token: ${{ secrets.WSO2_BOT_TOKEN }}
+        if: steps.label_check.outputs.valid == 'true'
       - name: Set release username and email
         shell: sh
         run: |
           git config --global user.name ${{ secrets.WSO2_BOT_USER }}
           git config --global user.email ${{ secrets.WSO2_BOT_EMAIL }}
+        if: steps.label_check.outputs.valid == 'true'
       - name: checkout pull request and merge.
         shell: sh
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' || github.event.action == 'synchronize'
+        if: github.event_name == 'pull_request' && steps.label_check.outputs.valid == 'true' && github.event.action == 'opened' || github.event.action == 'synchronize'
         run: |
           cd apk-repo
           gh pr checkout ${{ github.event.number }} -b pr-${{ github.event.number }}
@@ -53,3 +76,4 @@ jobs:
         run: |
           cd apk-repo/test/integration
           ./gradlew build
+        if: steps.label_check.outputs.valid == 'true'
