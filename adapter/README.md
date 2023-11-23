@@ -1,4 +1,4 @@
-# WSO2 APK - Adapter
+# WSO2 APK - AdapterTest
 
 This guide has information to setup adapter component for development and tasks for k8s operator development.
 
